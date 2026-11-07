@@ -1343,6 +1343,14 @@ class Player(ABC):
         self, protocol_player: Player, changed_values: dict[str, tuple[Any, Any]]
     ) -> None:
         """Handle callback when one of the linked protocol players of the player is updated."""
+        if (
+            protocol_player.player_id == self.active_output_protocol
+            and "playback_state" in changed_values
+        ):
+            # A trailing debounce can postpone a short clip's PLAYING state until
+            # after it has stopped when other protocol updates keep arriving.
+            self.refresh_state()
+            return
         # optional callback
         # default implementation will simply trigger an update for the state of the player
         self.mass.players.trigger_player_update(self.player_id)
